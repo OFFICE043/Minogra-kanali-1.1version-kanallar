@@ -10,7 +10,7 @@ db_pool = None
 # === Foydalanuvchilar jadvali ===
 async def init_db():
     global db_pool
-    db_url = os.getenv("DB_URL")
+    db_url = os.getenv("DATABASE_URL")
 
     if db_url:
         # Agar DB_URL berilgan bo'lsa, shuni ishlatamiz
