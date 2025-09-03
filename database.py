@@ -1,6 +1,7 @@
 # database.py
 import asyncpg
 import os
+import ssl
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -12,9 +13,11 @@ async def init_db():
     global db_pool
     db_url = os.getenv("DB_URL")
 
+    ssl_context = ssl.create_default_context()
+
     if db_url:
-        # Agar DB_URL berilgan bo'lsa, shuni ishlatamiz
-        db_pool = await asyncpg.create_pool(dsn=db_url)
+        # Agar DB_URL berilgan bo'lsa, SSL bilan ulanamiz
+        db_pool = await asyncpg.create_pool(dsn=db_url, ssl=ssl_context)
     else:
         # Agar DB_URL bo'lmasa, alohida parametrlar orqali ulanamiz
         db_pool = await asyncpg.create_pool(
@@ -22,7 +25,8 @@ async def init_db():
             password=os.getenv("DB_PASS"),
             database=os.getenv("DB_NAME"),
             host=os.getenv("DB_HOST"),
-            port=int(os.getenv("DB_PORT"))
+            port=int(os.getenv("DB_PORT")),
+            ssl=ssl_context
         )
 
     async with db_pool.acquire() as conn:
