@@ -13,13 +13,12 @@ async def init_db():
     global db_pool
     db_url = os.getenv("DB_URL")
 
+    # Supabase учун SSL мажбурий
     ssl_context = ssl.create_default_context()
 
     if db_url:
-        # Agar DB_URL berilgan bo'lsa, SSL bilan ulanamiz
         db_pool = await asyncpg.create_pool(dsn=db_url, ssl=ssl_context)
     else:
-        # Agar DB_URL bo'lmasa, alohida parametrlar orqali ulanamiz
         db_pool = await asyncpg.create_pool(
             user=os.getenv("DB_USER"),
             password=os.getenv("DB_PASS"),
@@ -64,13 +63,14 @@ async def init_db():
             );
         """)
 
-        # Dastlabki adminlar (o'z IDlaringizni qo'shing)
+        # Default adminlar
         default_admins = [7483732504, 5959511392]
         for admin_id in default_admins:
             await conn.execute(
                 "INSERT INTO admins (user_id) VALUES ($1) ON CONFLICT DO NOTHING",
                 admin_id
             )
+
 
 # === Foydalanuvchi qo'shish ===
 async def add_user(user_id):
@@ -79,11 +79,13 @@ async def add_user(user_id):
             "INSERT INTO users (user_id) VALUES ($1) ON CONFLICT DO NOTHING", user_id
         )
 
+
 # === Foydalanuvchilar soni ===
 async def get_user_count():
     async with db_pool.acquire() as conn:
         row = await conn.fetchrow("SELECT COUNT(*) FROM users")
         return row[0]
+
 
 # === Kod qo'shish ===
 async def add_kino_code(code, channel, message_id, post_count, title):
@@ -97,10 +99,12 @@ async def add_kino_code(code, channel, message_id, post_count, title):
                 post_count = EXCLUDED.post_count,
                 title = EXCLUDED.title;
         """, code, channel, message_id, post_count, title)
+
         await conn.execute("""
             INSERT INTO stats (code) VALUES ($1)
             ON CONFLICT DO NOTHING
         """, code)
+
 
 # === Kodni olish ===
 async def get_kino_by_code(code):
@@ -111,6 +115,7 @@ async def get_kino_by_code(code):
             WHERE code = $1
         """, code)
         return dict(row) if row else None
+
 
 # === Barcha kodlarni olish ===
 async def get_all_codes():
@@ -130,12 +135,14 @@ async def get_all_codes():
             for row in rows
         ]
 
+
 # === Kodni o'chirish ===
 async def delete_kino_code(code):
     async with db_pool.acquire() as conn:
         await conn.execute("DELETE FROM stats WHERE code = $1", code)
         result = await conn.execute("DELETE FROM kino_codes WHERE code = $1", code)
         return result.endswith("1")
+
 
 # === Statistika yangilash ===
 async def increment_stat(code, field):
@@ -152,10 +159,12 @@ async def increment_stat(code, field):
                 UPDATE stats SET {field} = {field} + 1 WHERE code = $1
             """, code)
 
+
 # === Kod statistikasi olish ===
 async def get_code_stat(code):
     async with db_pool.acquire() as conn:
         return await conn.fetchrow("SELECT searched, viewed FROM stats WHERE code = $1", code)
+
 
 # === Kod va nomni yangilash ===
 async def update_anime_code(old_code, new_code, new_title):
@@ -164,17 +173,20 @@ async def update_anime_code(old_code, new_code, new_title):
             UPDATE kino_codes SET code = $1, title = $2 WHERE code = $3
         """, new_code, new_title, old_code)
 
+
 # === Barcha foydalanuvchi IDlarini olish ===
 async def get_all_user_ids():
     async with db_pool.acquire() as conn:
         rows = await conn.fetch("SELECT user_id FROM users")
         return [row["user_id"] for row in rows]
 
+
 # === Barcha adminlarni olish ===
 async def get_all_admins():
     async with db_pool.acquire() as conn:
         rows = await conn.fetch("SELECT user_id FROM admins")
         return {row["user_id"] for row in rows}
+
 
 # === Yangi admin qo'shish ===
 async def add_admin(user_id: int):
@@ -183,6 +195,7 @@ async def add_admin(user_id: int):
             "INSERT INTO admins (user_id) VALUES ($1) ON CONFLICT DO NOTHING",
             user_id
         )
+
 
 # === Adminni o'chirish ===
 async def remove_admin(user_id: int):
