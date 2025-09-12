@@ -32,7 +32,7 @@ load_dotenv()
 keep_alive()
 
 API_TOKEN = os.getenv("API_TOKEN")
-CHANNELS = ["@anilordtv", "@sotiladi_shu_kanal01", "@anilordmanhwa", "@Minograapokalipsisi"]
+CHANNELS = ["@anilordtv", "@anilordmanhwa"]
 MAIN_CHANNELS = os.getenv("MAIN_CHANNELS").split(",")
 BOT_USERNAME = os.getenv("BOT_USERNAME")
 
@@ -51,7 +51,7 @@ async def make_subscribe_markup(code):
     keyboard.add(InlineKeyboardButton("✅ Tekshirish", callback_data=f"check_sub:{code}"))
     return keyboard
 
-ADMINS = {5959511392, 7483732504, 7598198843}
+ADMINS = {5959511392, 7483732504}
 
 # === HOLATLAR ===
 
